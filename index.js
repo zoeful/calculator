@@ -2,19 +2,39 @@
 
 class Calculator {
     
-    constructor(){
-        this.currentNum = ''
-        this.saveNum    = '';
-        this.sign       = '';
+    constructor($calcWrapper){
+        this.currentNum    = ''
+        this.saveNum       = '';
+        this.sign          = '';
+        this._$calcWrapper = $calcWrapper;
+
+        this.initCalculatorTemplate();
+        this.initCalcEventHandler();
     }
     
+    initCalcEventHandler(){
+        // this === Calculator
+
+        let _self = this;
+        document.querySelector('.number-area').addEventListener('click', function(event){
+            // this === window
+            _self.calcEventHandler.call(_self, event);
+        });
+    }
+
     num(num){
         console.log('number : ',num);
-        
+
         if(this.currentNum === ''){
             if(num === '.'){
                 num = '0.';
             }    
+        }
+
+        // +/- 연산을 처리해주기 위해 필요한 로직
+        if(this.currentNum !== '' && this.saveNum === '' && this.sign !== ''){
+            this.saveNum = this.currentNum;
+            this.currentNum = '';
         }
 
         this.currentNum += num;
@@ -48,72 +68,105 @@ class Calculator {
     }
     
     per(){
-        console.log('%');
+        if(this.currentNum === '' && this.sign !== ''){
+            this.currentNum = this.saveNum;
+            this.saveNum = '';
+        }else if(this.currentNum === '' && this.sign === ''){
+            this.currentNum = this.saveNum;
+            this.saveNum = '';
+        }
+        this.currentNum = this.currentNum * 0.01
+        console.log(this.currentNum);
+        document.querySelector('.result-area').innerHTML = this.currentNum;
     }
 
     plusMinus(){
-        if(this.saveNum){
-            this.saveNum = this.saveNum * -1;
-            document.querySelector('.result-area').innerHTML = this.saveNum;
-        }else{
-            this.currentNum = this.currentNum * -1;
-            document.querySelector('.result-area').innerHTML = this.currentNum;
+        if(this.currentNum === '' && this.sign !== ''){
+            this.currentNum = this.saveNum;
+            this.saveNum = '';
+        }else if(this.currentNum === '' && this.sign === ''){
+            this.currentNum = this.saveNum;
+            this.saveNum = '';
         }
-        
-        
+        this.currentNum = this.currentNum * -1;
+        document.querySelector('.result-area').innerHTML = this.currentNum;
     }
 
     equal(){
-        console.log('=');
         this.saveNum = eval(this.saveNum + this.sign + this.currentNum);
-        console.log('result : ',this.saveNum);
         this.currentNum = ''
         this.sign       = '';
         document.querySelector('.result-area').innerHTML = this.saveNum;
     }
 
     ac(){
-        console.log('AC');
         this.currentNum = ''
         this.saveNum    = '';
         this.sign       = '';
         document.querySelector('.result-area').innerHTML = 0;
     }
 
-}
+    initCalculatorTemplate(){
+        this._$calcWrapper.innerHTML = `
+            <div class="result-area">0</div>
+            <div class="calculate-area">
+                <section class="number-area">
+                    <p class="btn symbol-number">AC</p>
+                    <p class="btn symbol-number">+/-</p>
+                    <p class="btn symbol-number active">%</p>
+                    <p class="btn symbol">÷</p>
+                    <p class="btn number active">7</p>
+                    <p class="btn number">8</p>
+                    <p class="btn number">9</p>
+                    <p class="btn symbol">x</p>
+                    <p class="btn number">4</p>
+                    <p class="btn number">5</p>
+                    <p class="btn number">6</p>
+                    <p class="btn symbol">-</p>
+                    <p class="btn number">1</p>
+                    <p class="btn number">2</p>
+                    <p class="btn number">3</p>
+                    <p class="btn symbol active">+</p>
+                    <p class="btn number zero">0</p>
+                    <p class="btn number">.</p>
+                    <p class="btn symbol equal">=</p>
+                </section>
+            </div>
+        `
+    }
 
-let calculator = new Calculator();
-
-window.onload = ()=>{
-    
-    let numArea = document.querySelector('.number-area');
-
-    // 이벤트 위임
-    numArea.addEventListener('click',function(e){
-        
+    calcEventHandler(e){
+        // this === Calculator
         switch(e.target.innerHTML){
             case '+': 
             case '-':
             case 'x':
             case '÷':
-                calculator.operation(e.target.innerHTML);
+                this.operation(e.target.innerHTML);
                 break;
             case '%':
-                calculator.per(e.target.innerHTML);
+                this.per(e.target.innerHTML);
                 break;
             case '+/-':
-                calculator.plusMinus(e.target.innerHTML);
+                this.plusMinus(e.target.innerHTML);
                 break;
             case '=':
-                calculator.equal(e.target.innerHTML);
+                this.equal(e.target.innerHTML);
                 break;
             case 'AC':
-                calculator.ac(e.target.innerHTML);
+                this.ac(e.target.innerHTML);
                 break;
             default:
-                calculator.num(e.target.innerHTML);
+                this.num(e.target.innerHTML);
                 break;
         }
-        
-    });
+    }
+
+}
+
+window.onload = ()=>{
+    
+    let calcWrapper = document.querySelector('#calculator');
+    new Calculator(calcWrapper);
+
 }
